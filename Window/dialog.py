@@ -118,7 +118,7 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 				def pointToPixelCoordinates(pos):
 					return wx.Point((pcbnew.ToMM(pos.x) - left) * float(imageCroppedWidth) / physicalWidth, (pcbnew.ToMM(pos.y) - top) * float(imageCroppedHeight) / physicalHeight)
 
-				def widthToCoordinates(width):
+				def widthToPixelCoordinates(width):
 					if cropTop:
 						return pcbnew.ToMM(width) * float(imageCroppedWidth) / physicalWidth
 					else:
@@ -129,7 +129,7 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 					if shapeType == pcbnew.S_SEGMENT:
 						start = pointToPixelCoordinates(shape.GetStart())
 						end = pointToPixelCoordinates(shape.GetEnd())
-						width = widthToCoordinates(shape.GetWidth())
+						width = widthToPixelCoordinates(shape.GetWidth())
 
 						dc.SetPen(wx.Pen(maskColour, width=width))
 
@@ -137,7 +137,7 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 					elif shapeType == pcbnew.S_RECT:
 						start = pointToPixelCoordinates(shape.GetStart())
 						end = pointToPixelCoordinates(shape.GetEnd())
-						width = widthToCoordinates(shape.GetWidth())
+						width = widthToPixelCoordinates(shape.GetWidth())
 						
 						dc.SetPen(wx.Pen(maskColour, width=width))
 						dc.SetBrush(defaultBrush if shape.IsFilled() else transparentBrush)
@@ -147,7 +147,7 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 						start = pointToPixelCoordinates(shape.GetStart())
 						center = pointToPixelCoordinates(shape.GetCenter())
 						end = pointToPixelCoordinates(shape.GetEnd())
-						width = widthToCoordinates(shape.GetWidth())
+						width = widthToPixelCoordinates(shape.GetWidth())
 
 						dc.SetPen(wx.Pen(maskColour, width=width))
 						dc.SetBrush(transparentBrush)
@@ -155,15 +155,15 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 						dc.DrawArc(end, start, center)
 					elif shapeType == pcbnew.S_CIRCLE:
 						center = pointToPixelCoordinates(shape.GetCenter())
-						radius = widthToCoordinates(shape.GetRadius())
-						width = widthToCoordinates(shape.GetWidth())
+						radius = widthToPixelCoordinates(shape.GetRadius())
+						width = widthToPixelCoordinates(shape.GetWidth())
 
 						dc.SetPen(wx.Pen(maskColour, width=width))
 						dc.SetBrush(defaultBrush if shape.IsFilled() else transparentBrush)
 
 						dc.DrawCircle(center, radius)
 					elif shapeType == pcbnew.S_POLYGON:
-						width = widthToCoordinates(shape.GetWidth())
+						width = widthToPixelCoordinates(shape.GetWidth())
 
 						polys = []
 						corners = shape.GetCorners()
@@ -217,24 +217,23 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 		self.error = None
 
 	def AddError(self, newError):
-		if type(newError) is not str:
-			newError = str(newError)
-
 		print(newError)
 		if self.error == None:
-			self.error = newError
+			self.error = str(newError)
 		else:
-			self.error += f"\n{newError}"
+			self.error += f"\n{str(newError)}"
 
 	def SaveMaskedImage(self, savePath):
-		if self.maskedImage != None:
+		if self.maskedImage != None:			
 			image = self.maskedImage.ConvertToImage()
-			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONUNIT, wx.IMAGE_RESOLUTION_CENTIMETRES)
+			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONUNIT, wx.IMAGE_RESOLUTION_CM)
 			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONX, self.pixelsPerCMX)
 			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONY, self.pixelsPerCMY)
 			image.SetOption(wx.IMAGE_OPTION_QUALITY, 100)
 			image.SaveFile(savePath, wx.BITMAP_TYPE_JPEG)
-
+			
+			#dialog_maskSaved.dialogMaskSaved(self).ShowModal()
+			
 	def UpdateLayerChoiceOptions(self):
 		self.layers = []
 
@@ -288,7 +287,7 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 		self.Update()
 
 	def RegenerateMaskedImage(self):
-		self.ClearError()
+		#self.ClearError()
 
 		path = self.m_filePickerBaseImage.GetPath()
 		if path != "":
@@ -346,15 +345,20 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 		self.RegenerateMaskedImage()
 
 	def OnSaveImage(self, event):
-		self.RegenerateMaskedImage()
-		
-		with wx.FileDialog(self, "Save Mask", wildcard=u"JPEG files (*.jpg *.jpeg)|*.jpg;*.jpeg|PNG files (*.png)|*.png|BMP (*.bmp)|*.bmp|Other (*.*)|*.*", style=wx.FD_SAVE) as fileDialog:
-			if fileDialog.ShowModal() == wx.ID_CANCEL:
-				return     # the user changed their mind
+		try:
+			self.RegenerateMaskedImage()
+			
+			with wx.FileDialog(self, "Save Mask", wildcard=u"JPEG files (*.jpg *.jpeg)|*.jpg;*.jpeg|PNG files (*.png)|*.png|BMP (*.bmp)|*.bmp|Other (*.*)|*.*", style=wx.FD_SAVE) as fileDialog:
+				if fileDialog.ShowModal() == wx.ID_CANCEL:
+					return     # the user changed their mind
 
-			self.SaveMaskedImage(fileDialog.GetPath())
+				self.AddError(fileDialog.GetPath())
+				self.SaveMaskedImage(fileDialog.GetPath())
+		except:
+			import traceback
+			self.AddError(traceback.format_exc())
+			self.RePaint()
 
-			#dialog_maskSaved.dialogMaskSaved(self).ShowModal()
 
 	def OnCloseClick(self, event):
 		self.saveConfig()

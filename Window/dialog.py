@@ -1,4 +1,5 @@
 import os
+from math import floor, ceil
 
 import wx
 import pcbnew
@@ -16,6 +17,7 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 
 		self.ClearError()
 
+		self.overDraw = 1
 		self.defaultBaseImageSize = 1000
 		self.pixelsPerCMX = 100
 		self.pixelsPerCMY = 100
@@ -88,12 +90,12 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 				physicalAspect = physicalWidth / physicalHeight
 
 				imageCroppedHeight = imageBaseHeight
-				imageCroppedWidth = imageCroppedHeight * physicalAspect
+				imageCroppedWidth = floor(imageCroppedHeight * physicalAspect)
 				cropTop = False
 
 				if imageCroppedWidth > imageCroppedWidth:
 					imageCroppedWidth = imageBaseWidth
-					imageCroppedHeight = imageCroppedWidth / physicalAspect
+					imageCroppedHeight = floor(imageCroppedWidth / physicalAspect)
 					cropTop = True
 
 				self.pixelsPerCMX = float(imageCroppedWidth) / (physicalWidth / 10)
@@ -120,9 +122,9 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 
 				def widthToPixelCoordinates(width):
 					if cropTop:
-						return pcbnew.ToMM(width) * float(imageCroppedWidth) / physicalWidth
+						return ceil(pcbnew.ToMM(width) * float(imageCroppedWidth) / physicalWidth) + self.overDraw
 					else:
-						return pcbnew.ToMM(width) * float(imageCroppedHeight) / physicalHeight
+						return ceil(pcbnew.ToMM(width) * float(imageCroppedHeight) / physicalHeight) + self.overDraw
 
 				for shape in layerShapes:
 					shapeType = shape.GetShape()
@@ -257,6 +259,8 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 	def loadConfig(self):
 		try:
 			self.config.SetPath('/')
+			self.overDraw = self.config.ReadInt("width-overdraw", 2)
+			self.m_textCtrlOverDraw.SetValue(str(self.overDraw))
 			self.defaultBaseImageSize = self.config.ReadInt("default-base-image-size", 1000)
 			self.m_filePickerBaseImage.SetPath(self.config.Read("last-base-image", ""))
 			self.m_choiceMaskLayer.SetStringSelection(self.config.Read("mask-layer", ""))
@@ -270,6 +274,7 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 	def saveConfig(self):
 		try:
 			self.config.SetPath('/')
+			self.config.WriteInt("width-overdraw", self.overDraw)
 			self.config.WriteInt("default-base-image-size", self.defaultBaseImageSize)
 			self.config.Write("last-base-image", self.m_filePickerBaseImage.GetPath())
 			self.config.Write("mask-layer", self.m_choiceMaskLayer.GetStringSelection())
@@ -342,6 +347,15 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 			dc.DrawLabel(self.error, rect, wx.ALIGN_LEFT)
 
 	def OnSettingsChanged(self, event):
+
+		try:
+			newOverDraw = int(self.m_textCtrlOverDraw.GetValue())
+
+			if newOverDraw >= 0:
+				self.overDraw = newOverDraw
+		except:
+			pass
+
 		self.RegenerateMaskedImage()
 
 	def OnSaveImage(self, event):

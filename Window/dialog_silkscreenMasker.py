@@ -17,7 +17,7 @@ import wx.xrc
 class frameSilkscreenMasker ( wx.Frame ):
 
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Silkscreen Mask Creator", pos = wx.DefaultPosition, size = wx.Size( 370,623 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Silkscreen Mask Creator", pos = wx.DefaultPosition, size = wx.Size( 370,658 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL )
 
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
@@ -87,10 +87,33 @@ class frameSilkscreenMasker ( wx.Frame ):
 		self.m_staticTextFlip = wx.StaticText( self, wx.ID_ANY, u"Flip Mask", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticTextFlip.Wrap( -1 )
 
-		fgSizerSettings.Add( self.m_staticTextFlip, 0, wx.ALL, 5 )
+		fgSizerSettings.Add( self.m_staticTextFlip, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 
 		self.m_checkBoxFlip = wx.CheckBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
 		fgSizerSettings.Add( self.m_checkBoxFlip, 0, wx.ALL, 5 )
+
+
+		fgSizerSettings.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+		self.m_staticTextOverDraw = wx.StaticText( self, wx.ID_ANY, u"Over Draw:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextOverDraw.Wrap( -1 )
+
+		fgSizerSettings.Add( self.m_staticTextOverDraw, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		fgSizerOverDraw = wx.FlexGridSizer( 0, 2, 0, 0 )
+		fgSizerOverDraw.SetFlexibleDirection( wx.BOTH )
+		fgSizerOverDraw.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+
+		self.m_textCtrlOverDraw = wx.TextCtrl( self, wx.ID_ANY, u"2", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizerOverDraw.Add( self.m_textCtrlOverDraw, 0, wx.ALL, 5 )
+
+		self.m_staticTextOverDrawUnits = wx.StaticText( self, wx.ID_ANY, u"px", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextOverDrawUnits.Wrap( -1 )
+
+		fgSizerOverDraw.Add( self.m_staticTextOverDrawUnits, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+
+		fgSizerSettings.Add( fgSizerOverDraw, 1, wx.EXPAND, 5 )
 
 
 		fgSizerBase.Add( fgSizerSettings, 1, wx.EXPAND, 5 )
@@ -124,6 +147,7 @@ class frameSilkscreenMasker ( wx.Frame ):
 		self.m_choiceMaskLayer.Bind( wx.EVT_CHOICE, self.OnSettingsChanged )
 		self.m_checkBoxNegative.Bind( wx.EVT_CHECKBOX, self.OnSettingsChanged )
 		self.m_checkBoxFlip.Bind( wx.EVT_CHECKBOX, self.OnSettingsChanged )
+		self.m_textCtrlOverDraw.Bind( wx.EVT_TEXT, self.OnSettingsChanged )
 		self.m_buttonSaveImage.Bind( wx.EVT_BUTTON, self.OnSaveImage )
 		self.m_buttonClose.Bind( wx.EVT_BUTTON, self.OnCloseClick )
 
@@ -140,6 +164,7 @@ class frameSilkscreenMasker ( wx.Frame ):
 
 	def OnSettingsChanged( self, event ):
 		event.Skip()
+
 
 
 

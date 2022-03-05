@@ -48,7 +48,7 @@
             <property name="name">frameSilkscreenMasker</property>
             <property name="pos"></property>
             <property name="size">370,623</property>
-            <property name="style">wxCAPTION|wxCLOSE_BOX|wxMAXIMIZE_BOX|wxMINIMIZE_BOX|wxSYSTEM_MENU</property>
+            <property name="style">wxCAPTION|wxCLOSE_BOX|wxMINIMIZE_BOX|wxSYSTEM_MENU</property>
             <property name="subclass">; ; forward_declare</property>
             <property name="title">Silkscreen Mask Creator</property>
             <property name="tooltip"></property>

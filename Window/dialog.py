@@ -17,8 +17,8 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 		self.ClearError()
 
 		self.defaultBaseImageSize = 1000
-		self.dpiX = 300
-		self.dpiY = 300
+		self.pixelsPerCMX = 100
+		self.pixelsPerCMY = 100
 		self.currentPath = ""
 		self.baseImage = None
 		self.maskedImage = None
@@ -96,8 +96,8 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 					imageCroppedHeight = imageCroppedWidth / physicalAspect
 					cropTop = True
 
-				self.dpiX = float(imageCroppedWidth) / physicalWidth / 25.4
-				self.dpiY = float(imageCroppedHeight) / physicalHeight / 25.4
+				self.pixelsPerCMX = float(imageCroppedWidth) / (physicalWidth / 10)
+				self.pixelsPerCMY = float(imageCroppedHeight) / (physicalHeight / 10)
 				self.maskedImage = self.baseImage.GetSubBitmap(wx.Rect((imageBaseWidth - imageCroppedWidth) // 2, (imageBaseHeight - imageCroppedHeight) // 2, imageCroppedWidth, imageCroppedHeight))
 
 				flipped = self.m_checkBoxFlip.IsChecked()
@@ -188,8 +188,8 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 					self.maskedImage = wx.Bitmap(image)
 
 			else:
-				self.dpiX = float(imageBaseWidth) / 100 / 25.4
-				self.dpiY = float(imageBaseHeight) / 100 / 25.4
+				self.pixelsPerCMX = float(imageBaseWidth) / 10
+				self.pixelsPerCMY = float(imageBaseHeight) / 10
 				self.maskedImage = self.baseImage.GetSubBitmap(wx.Rect(0, 0, imageBaseWidth, imageBaseHeight))
 
 			self.CreateDrawImage()
@@ -217,6 +217,9 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 		self.error = None
 
 	def AddError(self, newError):
+		if type(newError) is not str:
+			newError = str(newError)
+
 		print(newError)
 		if self.error == None:
 			self.error = newError
@@ -226,13 +229,11 @@ class Dialog(dialog_silkscreenMasker.frameSilkscreenMasker):
 	def SaveMaskedImage(self, savePath):
 		if self.maskedImage != None:
 			image = self.maskedImage.ConvertToImage()
-			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONUNIT, wx.IMAGE_RESOLUTION_INCHES)
-			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONX, self.dpiX)
-			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONY, self.dpiY)
-
-			#fileDir, fileExtention= os.path.splitext(self.currentPath)
-			#image.SaveFile(f"{fileDir}_masked{fileExtention}", wx.BITMAP_TYPE_PNG)
-			image.SaveFile(savePath, wx.BITMAP_TYPE_PNG)
+			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONUNIT, wx.IMAGE_RESOLUTION_CENTIMETRES)
+			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONX, self.pixelsPerCMX)
+			image.SetOption(wx.IMAGE_OPTION_RESOLUTIONY, self.pixelsPerCMY)
+			image.SetOption(wx.IMAGE_OPTION_QUALITY, 100)
+			image.SaveFile(savePath, wx.BITMAP_TYPE_JPEG)
 
 	def UpdateLayerChoiceOptions(self):
 		self.layers = []
